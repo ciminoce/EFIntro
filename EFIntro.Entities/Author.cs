@@ -17,6 +17,7 @@ namespace EFIntro.Entities
         [Required(ErrorMessage = "The field {0} is required")]
         [StringLength(50, ErrorMessage = "The field {0} must be between {2} and {1} characteres", MinimumLength = 3)]
         public string LastName { get; set; } = null!;
+        public ICollection<Book>? Books { get; set; }
         public override string ToString()
         {
             return $"{LastName.ToUpper()}, {FirstName}";

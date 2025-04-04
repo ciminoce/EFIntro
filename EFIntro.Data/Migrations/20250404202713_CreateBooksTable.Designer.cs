@@ -4,6 +4,7 @@ using EFIntro.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EFIntro.Data.Migrations
 {
     [DbContext(typeof(LibraryContext))]
-    partial class LibraryContextModelSnapshot : ModelSnapshot
+    [Migration("20250404202713_CreateBooksTable")]
+    partial class CreateBooksTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -63,39 +66,17 @@ namespace EFIntro.Data.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateOnly>("PublishDate")
-                        .HasColumnType("Date");
+                        .HasColumnType("date");
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasMaxLength(300)
-                        .HasColumnType("nvarchar(300)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("AuthorId");
 
-                    b.HasIndex(new[] { "Title", "AuthorId" }, "IX_Books_Title_AuthorId")
-                        .IsUnique();
-
-                    b.ToTable("Books", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 6,
-                            AuthorId = 1,
-                            Pages = 400,
-                            PublishDate = new DateOnly(1986, 10, 30),
-                            Title = "Foundation and Earth"
-                        },
-                        new
-                        {
-                            Id = 7,
-                            AuthorId = 1,
-                            Pages = 400,
-                            PublishDate = new DateOnly(1953, 10, 10),
-                            Title = "Second Foundation"
-                        });
+                    b.ToTable("Book");
                 });
 
             modelBuilder.Entity("EFIntro.Entities.Book", b =>
@@ -103,7 +84,7 @@ namespace EFIntro.Data.Migrations
                     b.HasOne("EFIntro.Entities.Author", "Author")
                         .WithMany("Books")
                         .HasForeignKey("AuthorId")
-                        .OnDelete(DeleteBehavior.ClientNoAction)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Author");
