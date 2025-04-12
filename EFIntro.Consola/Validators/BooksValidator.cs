@@ -15,6 +15,13 @@ namespace EFIntro.Consola.Validators
 
             RuleFor(b => b.PublishDate).NotEmpty().WithMessage("The {PropertyName} is required")
                 .LessThanOrEqualTo(DateOnly.FromDateTime(DateTime.Today.Date)).WithMessage("The {PropertyName} must be at least {ComparisonValue}");
+            When(b => b.AuthorId == 0, () =>
+            {
+                RuleFor(b => b.AuthorId).Equal(0).WithMessage("When adding a new Author, AuthorId must be {ComparisonValue}");
+            }).Otherwise(() => {
+
+                RuleFor(b => b.AuthorId).GreaterThan(0).WithMessage("The field {PropertyName} must be greater than {ComparisonValue}");
+            });
 
         }
     }

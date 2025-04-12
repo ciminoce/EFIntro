@@ -10,10 +10,10 @@ namespace EFIntro.Data
         public DbSet<Book> Books { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlServer("Data Source=.; Initial Catalog=LibraryDb; Trusted_Connection=true; TrustServerCertificate=true;")
-               .EnableSensitiveDataLogging() // Permite ver valores en las consultas
-               .LogTo(Console.WriteLine, LogLevel.Information)
-               .UseLazyLoadingProxies(false);//habilita Lazy Loading
+            optionsBuilder.UseSqlServer("Data Source=.; Initial Catalog=LibraryDb; Trusted_Connection=true; TrustServerCertificate=true;");
+               //.EnableSensitiveDataLogging() // Permite ver valores en las consultas
+               //.LogTo(Console.WriteLine, LogLevel.Information)
+               //.UseLazyLoadingProxies(false);//habilita Lazy Loading
         }
         //FluentAPI
         protected override void OnModelCreating(ModelBuilder modelBuilder)

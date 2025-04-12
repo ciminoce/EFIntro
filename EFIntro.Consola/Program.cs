@@ -64,7 +64,7 @@ namespace EFIntro.Consola
                         DeleteBooks();
                         break;
                     case "4":
-                        //EditAuthors();
+                        EditBooks();
                         break;
                     case "r":
                         return;
@@ -73,6 +73,206 @@ namespace EFIntro.Consola
                 }
 
             } while (true);
+        }
+
+        private static void EditBooks()
+        {
+            Console.Clear();
+            Console.WriteLine("Editing Books");
+            Console.WriteLine("list Of Books to Edit");
+            using (var context=new LibraryContext())
+            {
+                //var books = context.Books.OrderBy(b => b.Id)
+                //    .Select(b => new
+                //    {
+                //        BookId = b.Id,
+                //        BookTitle = b.Title
+                //    }).ToList();
+                //foreach (var item in books)
+                //{
+                //    Console.WriteLine($"{item.BookId}-{item.BookTitle}");
+                //}
+                var books = context.Books.OrderBy(b => b.Id)
+                    .Select(b => new
+                    {
+                        b.Id,
+                        b.Title
+                    }).ToList();
+                foreach (var item in books)
+                {
+                    Console.WriteLine($"{item.Id}-{item.Title}");
+                }
+                Console.Write("Enter BookID to edit (0 to Escape):");
+                int bookId = int.Parse(Console.ReadLine()!);
+                if(bookId < 0)
+                {
+                    Console.WriteLine("Invalid BookID... ");
+                    Console.ReadLine();
+                    return;
+                }
+                if (bookId == 0)
+                {
+                    Console.WriteLine("Cancelled by user");
+                    Console.ReadLine();
+                    return;
+                }
+
+                var bookInDb = context.Books.Include(b=>b.Author)
+                    .FirstOrDefault(b=>b.Id==bookId);
+                if (bookInDb == null)
+                {
+                    Console.WriteLine("Book does not exist...");
+                    Console.ReadLine();
+                    return;
+                }
+                Console.WriteLine($"Current Book Title: {bookInDb.Title}");
+                Console.Write("Enter New Title (or ENTER to Keep the same):");
+                var newTitle = Console.ReadLine();
+                if (!string.IsNullOrEmpty(newTitle))
+                {
+                    bookInDb.Title = newTitle;
+                }
+                Console.WriteLine($"Current Book Pages Count: {bookInDb.Pages}");
+                Console.Write("Enter Book Pages Count (or ENTER to Keep the same):");
+                var newPages = Console.ReadLine();
+                if (!string.IsNullOrEmpty(newPages))
+                {
+                    if (!int.TryParse(newPages,out int bookPages)||bookPages<=0)
+                    {
+                        Console.WriteLine("You enter an invalid page count");
+                        Console.ReadLine();
+                        return;
+                    }
+                    bookInDb.Pages=bookPages;
+                }
+
+                Console.WriteLine($"Current Book Publish Date: {bookInDb.PublishDate}");
+                Console.Write("Enter New Book Publish Date (or ENTER to Keep the same):");
+                var newDate = Console.ReadLine();
+                if (!string.IsNullOrEmpty(newDate))
+                {
+                    if (!DateOnly.TryParse(newDate,out DateOnly publishDate) ||
+                        publishDate>DateOnly.FromDateTime(DateTime.Today))
+                    {
+                        Console.WriteLine("Invalid Publish Date...");
+                        Console.ReadLine();
+                        return;
+                    }
+                    bookInDb.PublishDate=publishDate;
+                }
+                Console.WriteLine($"Current Book Author:{bookInDb.Author }");
+                Console.WriteLine("Available Authors");
+                var authors = context.Authors
+                    .OrderBy(a=>a.Id)
+                    .ToList();
+                foreach (var  author in authors)
+                {
+                    Console.WriteLine($"{author.Id}-{author}");
+                }
+                Console.Write("Enter AuthorID (or ENTER to Keep the same or 0 New Author):");
+                var newAuthor = Console.ReadLine();
+                if (!string.IsNullOrEmpty(newAuthor))
+                {
+                    if (!int.TryParse(newAuthor, out int authorId) || authorId < 0)
+                    {
+                        Console.WriteLine("You enter an invalid AuthorID");
+                        Console.ReadLine();
+                        return;
+                    }
+                    if (authorId>0)
+                    {
+                        var existAuthor = context.Authors.Any(a => a.Id == authorId);
+                        if (!existAuthor)
+                        {
+                            Console.WriteLine("AuthorID not found");
+                            Console.ReadLine();
+                            return;
+                        }
+                        bookInDb.AuthorId = authorId;
+
+                    }
+                    else
+                    {
+                        //Entering new author
+                        Console.WriteLine("Adding a New Author");
+                        Console.Write("Enter First Name:");
+                        var firstName = Console.ReadLine();
+                        Console.Write("Enter Last Name:");
+                        var lastName = Console.ReadLine();
+                        var existingAuthor = context.Authors.FirstOrDefault(
+                                a => a.FirstName.ToLower() == firstName!.ToLower()
+                            && a.LastName.ToLower() == lastName!.ToLower());
+
+                        if (existingAuthor is not null)
+                        {
+                            Console.WriteLine("You have entered an existing author!!!");
+                            Console.WriteLine("Assigning his AuthorID");
+
+                            bookInDb.AuthorId= existingAuthor.Id;
+                        }
+                        else
+                        {
+                            Author Author = new Author
+                            {
+                                FirstName = firstName ?? string.Empty,
+                                LastName = lastName ?? string.Empty,
+                            };
+
+                            var validationContext = new ValidationContext(Author);
+                            var errorMessages = new List<ValidationResult>();
+
+                            bool isValid = Validator.TryValidateObject(Author, validationContext, errorMessages, true);
+
+                            if (isValid)
+                            {
+                                //bookInDb.Author = Author;
+                                //Alternativa
+                                context.Authors.Add(Author);
+                                context.SaveChanges();
+                                bookInDb.AuthorId = Author.Id;
+                            }
+                            else
+                            {
+                                foreach (var message in errorMessages)
+                                {
+                                    Console.WriteLine(message);
+                                }
+                            }
+
+                        }
+                    }
+
+                }
+
+                var originalBook = context.Books
+                    .AsNoTracking()
+                    .FirstOrDefault(a => a.Id == bookInDb.Id);
+
+                Console.Write($"Are you sure to edit \"{originalBook!.Title}\"? (y/n):");
+                var confirm = Console.ReadLine();
+                try
+                {
+                    if (confirm?.ToLower() == "y")
+                    {
+                        context.SaveChanges();
+                        Console.WriteLine("Book successfully edited");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Operation cancelled by user");
+                    }
+
+                }
+                catch (Exception ex)
+                {
+
+                    Console.WriteLine(ex.Message);
+                }   
+                Console.ReadLine();
+                return;
+
+
+            }
         }
 
         private static void DeleteBooks()
@@ -160,49 +360,176 @@ namespace EFIntro.Consola
                     Console.ReadLine();
                     return;
                 }
-                var selectedAuthor = context.Authors.Find(authorId);
-                if(selectedAuthor is null)
+                if (authorId > 0)
                 {
-                    Console.WriteLine("Author not found!!!");
-                    Console.ReadLine();
-                    return;
-                }
-                var newBook = new Book
-                {
-                    Title = title ?? string.Empty,
-                    PublishDate = publishDate,
-                    Pages = pages,
-                    AuthorId = authorId
-                };
-
-                var booksValidator = new BooksValidator();
-                var validationResult = booksValidator.Validate(newBook);
-
-                if (validationResult.IsValid)
-                {
-                    //bool exist=context.Books.Any(b=>b.Title.ToLower()== title.ToLower() && 
-                    //    b.AuthorId==authorId);
-                    var existingBook = context.Books.FirstOrDefault(b => b.Title.ToLower() == title!.ToLower() &&
-                        b.AuthorId == authorId);
-
-                    if (existingBook is null)
+                    var selectedAuthor = context.Authors.Find(authorId);
+                    if (selectedAuthor is null)
                     {
-                        context.Books.Add(newBook);
-                        context.SaveChanges();
-                        Console.WriteLine("Book Successfully Added!!!");
+                        Console.WriteLine("Author not found!!!");
+                        Console.ReadLine();
+                        return;
+                    }
+                    var newBook = new Book
+                    {
+                        Title = title ?? string.Empty,
+                        PublishDate = publishDate,
+                        Pages = pages,
+                        AuthorId = authorId
+                    };
+
+                    var booksValidator = new BooksValidator();
+                    var validationResult = booksValidator.Validate(newBook);
+
+                    if (validationResult.IsValid)
+                    {
+                        //bool exist=context.Books.Any(b=>b.Title.ToLower()== title.ToLower() && 
+                        //    b.AuthorId==authorId);
+                        var existingBook = context.Books.FirstOrDefault(b => b.Title.ToLower() == title!.ToLower() &&
+                            b.AuthorId == authorId);
+
+                        if (existingBook is null)
+                        {
+                            context.Books.Add(newBook);
+                            context.SaveChanges();
+                            Console.WriteLine("Book Successfully Added!!!");
+
+                        }
+                        else
+                        {
+                            Console.WriteLine("Book duplicated!!!");
+                        }
 
                     }
                     else
                     {
-                        Console.WriteLine("Book duplicated!!!");
+                        foreach (var error in validationResult.Errors)
+                        {
+                            Console.WriteLine(error);
+                        }
                     }
 
                 }
                 else
                 {
-                    foreach (var error in validationResult.Errors)
+                    //Entering new author
+                    Console.WriteLine("Adding a New Author");
+                    Console.Write("Enter First Name:");
+                    var firstName = Console.ReadLine();
+                    Console.Write("Enter Last Name:");
+                    var lastName = Console.ReadLine();
+                    var existingAuthor = context.Authors.FirstOrDefault(
+                            a => a.FirstName.ToLower() == firstName!.ToLower()
+                        && a.LastName.ToLower() == lastName!.ToLower());
+                    if (existingAuthor is not null)
                     {
-                        Console.WriteLine(error);
+                        Console.WriteLine("You have entered an existing author!!!");
+                        Console.WriteLine("Assigning his AuthorID");
+
+                        var newBook = new Book
+                        {
+                            Title = title ?? string.Empty,
+                            PublishDate = publishDate,
+                            Pages = pages,
+                            AuthorId = existingAuthor.Id
+                        };
+
+                        var booksValidator = new BooksValidator();
+                        var validationResult = booksValidator.Validate(newBook);
+
+                        if (validationResult.IsValid)
+                        {
+                            //bool exist=context.Books.Any(b=>b.Title.ToLower()== title.ToLower() && 
+                            //    b.AuthorId==authorId);
+                            var existingBook = context.Books.FirstOrDefault(b => b.Title.ToLower() == title!.ToLower() &&
+                                b.AuthorId == authorId);
+
+                            if (existingBook is null)
+                            {
+                                context.Books.Add(newBook);
+                                context.SaveChanges();
+                                Console.WriteLine("Book Successfully Added!!!");
+
+                            }
+                            else
+                            {
+                                Console.WriteLine("Book duplicated!!!");
+                            }
+
+                        }
+                        else
+                        {
+                            foreach (var error in validationResult.Errors)
+                            {
+                                Console.WriteLine(error);
+                            }
+                        }
+
+
+                    }
+                    else
+                    {
+                        Author newAuthor = new Author
+                        {
+                            FirstName = firstName ?? string.Empty,
+                            LastName = lastName ?? string.Empty,
+                        };
+
+                        var validationContext = new ValidationContext(newAuthor);
+                        var errorMessages = new List<ValidationResult>();
+
+                        bool isValid = Validator.TryValidateObject(newAuthor, validationContext, errorMessages, true);
+
+                        if (isValid)
+                        {
+                            var newBook = new Book
+                            {
+                                Title = title ?? string.Empty,
+                                PublishDate = publishDate,
+                                Pages = pages,
+                                Author = newAuthor
+                            };
+
+                            var booksValidator = new BooksValidator();
+                            var validationResult = booksValidator.Validate(newBook);
+
+                            if (validationResult.IsValid)
+                            {
+                                //bool exist=context.Books.Any(b=>b.Title.ToLower()== title.ToLower() && 
+                                //    b.AuthorId==authorId);
+                                var existingBook = context.Books.FirstOrDefault(b => b.Title.ToLower() == title!.ToLower() &&
+                                    b.AuthorId == authorId);
+
+                                if (existingBook is null)
+                                {
+                                    context.Add(newBook);
+                                    context.SaveChanges();
+                                    Console.WriteLine("Book Successfully Added!!!");
+
+                                }
+                                else
+                                {
+                                    Console.WriteLine("Book duplicated!!!");
+                                }
+
+                            }
+                            else
+                            {
+                                foreach (var error in validationResult.Errors)
+                                {
+                                    Console.WriteLine(error);
+                                }
+                            }
+
+
+                        }
+                        else
+                        {
+                            foreach (var message in errorMessages)
+                            {
+                                Console.WriteLine(message);
+                            }
+                        }
+
                     }
                 }
                 Console.ReadLine();
@@ -244,6 +571,7 @@ namespace EFIntro.Consola
                 Console.WriteLine("2 - Add New Author");
                 Console.WriteLine("3 - Delete an Author");
                 Console.WriteLine("4 - Edit an Author");
+                Console.WriteLine("5 - List of Authors With Books");
                 Console.WriteLine("r - Return");
                 Console.Write("Enter an option:");
                 var option = Console.ReadLine();
@@ -261,6 +589,9 @@ namespace EFIntro.Consola
                     case "4":
                         EditAuthors();
                         break;
+                    case "5":
+                        ListOfAuthorsWithBooks();
+                        break;
                     case "r":
                         return;
                     default:
@@ -269,6 +600,30 @@ namespace EFIntro.Consola
 
             } while (true);
 
+        }
+
+        private static void ListOfAuthorsWithBooks()
+        {
+            Console.Clear();
+            Console.WriteLine("List of Authors With Books");
+            using (var context=new LibraryContext())
+            {
+                var authorGroups = context.Books
+                    .GroupBy(a => a.AuthorId).ToList();
+                foreach (var group in authorGroups)
+                {
+                    Console.WriteLine($"AuthorID: {group.Key}");
+                    var author = context.Authors.Find(group.Key);
+                    Console.WriteLine($"Author: {author}");
+                    foreach(var book in group)
+                    {
+                        Console.WriteLine($"    {book.Title}");
+                    }
+                    Console.WriteLine($"Books Count: {group.Count()}");
+                    Console.WriteLine($"Average Page Count: {group.Average(b=>b.Pages)}");
+                }
+            }
+            Console.ReadLine();
         }
 
         private static void EditAuthors()
@@ -380,11 +735,16 @@ namespace EFIntro.Consola
                     {
                         Console.WriteLine("Operation cancelled by user");
                     }
-
+                    
                 }
                 else
                 {
                     Console.WriteLine("Author with books!!! Delete deny");
+                    context.Entry(authorInDb).Collection(a => a.Books!).Load();
+                    foreach(var book in authorInDb.Books!)
+                    {
+                        Console.WriteLine($"{book.Title}");
+                    }
                 }
 
                 Console.ReadLine();
