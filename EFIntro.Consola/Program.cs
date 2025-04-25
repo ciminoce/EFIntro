@@ -572,6 +572,7 @@ namespace EFIntro.Consola
                 Console.WriteLine("3 - Delete an Author");
                 Console.WriteLine("4 - Edit an Author");
                 Console.WriteLine("5 - List of Authors With Books");
+                Console.WriteLine("6 - Authors With Books (Summary or Details)");
                 Console.WriteLine("r - Return");
                 Console.Write("Enter an option:");
                 var option = Console.ReadLine();
@@ -592,6 +593,9 @@ namespace EFIntro.Consola
                     case "5":
                         ListOfAuthorsWithBooks();
                         break;
+                    case "6":
+                        AuthorsWithBooksSummaryOrDetails();
+                        break;
                     case "r":
                         return;
                     default:
@@ -600,6 +604,56 @@ namespace EFIntro.Consola
 
             } while (true);
 
+        }
+
+        private static void AuthorsWithBooksSummaryOrDetails()
+        {
+            Console.Clear();
+            Console.WriteLine("List of Authors");
+
+            Console.Write("Show (1) Summary or (2) Details? ");
+            var option = Console.ReadLine();
+
+            using (var context = new LibraryContext())
+            {
+                var authors = context.Authors
+                    .OrderBy(a => a.Id)
+                    .Select(a => new
+                    {
+                        a.Id,
+                        FullName = $"{a.FirstName} {a.LastName}",
+                        BookCount = context.Books.Count(b => b.AuthorId == a.Id),
+                        Books = context.Books
+                            .Where(b => b.AuthorId == a.Id)
+                            .OrderBy(b => b.Title)
+                            .Select(b => new { b.Title, b.PublishDate, b.Pages })
+                            .ToList()
+                    })
+                    .ToList();
+
+                foreach (var a in authors)
+                {
+                    Console.WriteLine($"{a.Id} - {a.FullName} (Books: {a.BookCount})");
+
+                    if (option == "2") // Opción de detalle
+                    {
+                        if (a.Books.Any())
+                        {
+                            Console.WriteLine("   📚 Books:");
+                            foreach (var book in a.Books)
+                            {
+                                Console.WriteLine($"     - {book.Title} ({book.PublishDate}) - {book.Pages} pages");
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine("   🚫 No books available.");
+                        }
+                    }
+                }
+            }
+
+            Console.ReadLine();
         }
 
         private static void ListOfAuthorsWithBooks()
