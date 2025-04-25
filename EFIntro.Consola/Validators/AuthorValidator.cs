@@ -8,14 +8,14 @@ namespace EFIntro.Consola.Validators
         public AuthorValidator()
         {
             RuleFor(a => a.FirstName)
-                .NotEmpty().WithMessage("El nombre es obligatorio.")
-                .MinimumLength(3).WithMessage("El nombre debe tener al menos 3 caracteres.")
-                .MaximumLength(50).WithMessage("El nombre no puede tener más de 50 caracteres.");
+                .NotEmpty().WithMessage("The name is required.")
+                .MinimumLength(3).WithMessage("The name must have at least 3 characters")
+                .MaximumLength(50).WithMessage("The name can not have more than 50 characters.");
 
             RuleFor(a => a.LastName)
-                .NotEmpty().WithMessage("El apellido es obligatorio.")
-                .MinimumLength(3).WithMessage("El apellido debe tener al menos 3 caracteres.")
-                .MaximumLength(50).WithMessage("El apellido no puede tener más de 50 caracteres.");
+                .NotEmpty().WithMessage("The surname is required.")
+                .MinimumLength(3).WithMessage("The surname must have at least 3 characters")
+                .MaximumLength(50).WithMessage("The surname can not have more than 50 characters.");
 
         }
     }
