@@ -19,6 +19,8 @@ namespace EFIntro.Ioc
                 options.UseSqlServer(connectionString));
 
             services.AddScoped<IAuthorRepository, AuthorRepository>();
+            services.AddScoped<IBookRepository, BookRepository>();
+
             services.AddScoped<IAuthorService, AuthorService>();
 
             return services.BuildServiceProvider();

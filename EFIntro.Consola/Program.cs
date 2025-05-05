@@ -3,7 +3,6 @@ using EFIntro.Entities;
 using EFIntro.Ioc;
 using EFIntro.Service.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
-using System.ComponentModel.DataAnnotations;
 
 namespace EFIntro.Consola
 {
