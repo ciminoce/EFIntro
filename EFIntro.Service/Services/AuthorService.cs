@@ -6,62 +6,67 @@ namespace EFIntro.Service.Services
 {
     public class AuthorService : IAuthorService
     {
-        private readonly IAuthorRepository _repository = null!;
+        private readonly IAuthorRepository _authorRepository = null!;
 
         public AuthorService(IAuthorRepository repository)
         {
-            _repository = repository;
+            _authorRepository = repository;
         }
 
-        public List<IGrouping<int, Book>> AuthorsGroupIdBooks()
+        public List<IGrouping<int, Book>> AuthorsWithBooksCount()
         {
-            return _repository.AuthorsGroupIdBooks();
+            return _authorRepository.AuthorsWithBooksCount();
         }
 
         public void Delete(int authorId)
         {
-            _repository.Delete(authorId);
+            _authorRepository.Delete(authorId);
         }
 
         public bool Exist(string firstName, string lastName, int? excludeId = null)
         {
-            return _repository.Exist(firstName, lastName, excludeId);
+            return _authorRepository.Exist(firstName, lastName, excludeId);
         }
 
         public List<Author> GetAll(string sortedBy = "LastName")
         {
-            return _repository.GetAll(sortedBy);
+            return _authorRepository.GetAll(sortedBy);
         }
 
         public List<Author> GetAllWithBooks()
         {
-            return _repository.GetAllWithBooks();
+            return _authorRepository.GetAllWithBooks();
         }
 
         public Author? GetById(int authorId, bool tracked = false)
         {
-            return _repository.GetById(authorId, tracked);
+            return _authorRepository.GetById(authorId, tracked);
+        }
+
+        public Author? GetByName(string firstName, string lastName)
+        {
+            return _authorRepository.GetByName(firstName, lastName);
         }
 
         public bool HasBooks(int authorId)
         {
-            return _repository.HasBooks(authorId);
+            return _authorRepository.HasBooks(authorId);
         }
 
         public void LoadBooks(Author author)
         {
-            _repository.LoadBooks(author);
+            _authorRepository.LoadBooks(author);
         }
 
         public void Save(Author author)
         {
             if (author.Id==0)
             {
-                _repository.Add(author);
+                _authorRepository.Add(author);
             }
             else
             {
-                _repository.Edit(author);
+                _authorRepository.Edit(author);
             }
         }
     }

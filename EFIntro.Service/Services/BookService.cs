@@ -6,42 +6,47 @@ namespace EFIntro.Service.Services
 {
     public class BookService : IBookService
     {
-        private readonly IBookRepository _repository = null!;
+        private readonly IBookRepository _bookRepository = null!;
 
         public BookService(IBookRepository repository)
         {
-            _repository = repository;
+            _bookRepository = repository;
+        }
+
+        public List<IGrouping<int, Book>> BooksGroupByAuthor()
+        {
+            return _bookRepository.BooksGroupByAuthor();
         }
 
         public void Delete(int bookId)
         {
-            _repository.Delete(bookId);
+            _bookRepository.Delete(bookId);
         }
 
         public bool Exist(string bookTitle, int bookAuthorId, int? excludeId = null)
         {
-            return _repository.Exist(bookTitle, bookAuthorId, excludeId);
+            return _bookRepository.Exist(bookTitle, bookAuthorId, excludeId);
         }
 
-        public List<Book> GetAll(string sortedBy = "Title")
+        public List<Book> GetAll(string sortedBy = "Title", bool include=false)
         {
-            return _repository.GetAll(sortedBy);
+            return _bookRepository.GetAll(sortedBy,true);
         }
 
         public Book? GetById(int bookId, bool include = false, bool tracked = false)
         {
-            return _repository.GetById(bookId, include, tracked);
+            return _bookRepository.GetById(bookId, include, tracked);
         }
 
         public void Save(Book book)
         {
             if (book.Id == 0)
             {
-                _repository.Add(book);
+                _bookRepository.Add(book);
             }
             else
             {
-                _repository.Update(book);
+                _bookRepository.Update(book);
             }
         }
     }

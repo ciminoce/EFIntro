@@ -13,9 +13,10 @@ namespace EFIntro.Data.Repositories
             _context = context;
         }
 
-        public List<Book> GetAll(string sortedBy = "Title")
+        public List<Book> GetAll(string sortedBy = "Title", bool include = false)
         {
             IQueryable<Book> query = _context.Books.AsNoTracking();
+            query=include?query.Include(b=>b.Author):query;
             return sortedBy switch
             {
                 "Title" => query.OrderBy(b => b.Title)
@@ -69,6 +70,9 @@ namespace EFIntro.Data.Repositories
                     && b.AuthorId == bookAuthorId);
         }
 
-
+        public List<IGrouping<int, Book>> BooksGroupByAuthor()
+        {
+            return _context.Books.GroupBy(b=>b.AuthorId).ToList();
+        }
     }
 }

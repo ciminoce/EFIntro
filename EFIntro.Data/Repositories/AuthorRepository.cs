@@ -1,6 +1,7 @@
 ﻿using EFIntro.Data.Interfaces;
 using EFIntro.Entities;
 using Microsoft.EntityFrameworkCore;
+using static System.Reflection.Metadata.BlobBuilder;
 
 namespace EFIntro.Data.Repositories
 {
@@ -16,21 +17,6 @@ namespace EFIntro.Data.Repositories
         {
             IQueryable<Author> query = _context.Authors.AsNoTracking();
 
-            //switch (sortedBy)
-            //{
-            //    case "LastName":
-            //        return query.OrderBy(a => a.LastName)
-            //            .ThenBy(a => a.FirstName)
-            //            .ToList();
-            //    case "FirstName":
-            //        return query.OrderBy(a => a.FirstName)
-            //        .ThenBy(a => a.LastName)
-            //        .ToList();
-
-            //    default:
-            //        return query.OrderBy(a => a.Id).ToList();
-
-            //}
 
             //MODERM FORM--> MAS BANANA
             return sortedBy switch
@@ -112,10 +98,24 @@ namespace EFIntro.Data.Repositories
             return _context.Authors.Include(a => a.Books).ToList();
         }
 
-        public List<IGrouping<int, Book>> AuthorsGroupIdBooks()
+        public List<IGrouping<int,Book>> AuthorsWithBooksCount()
         {
-            return _context.Books
-                    .GroupBy(a => a.AuthorId).ToList();
+            var groupedBooksByAuthor =
+                from author in _context.Authors
+                join book in _context.Books on author.Id equals book.AuthorId into authorBooks
+                from book in authorBooks.DefaultIfEmpty() // Left Join
+                group book by author.Id into grouped // Agrupar por AuthorId
+                select grouped; // Resultado: IGrouping<int, Book>
+
+            // Convertir a lista
+            var result = groupedBooksByAuthor.ToList();
+            return result;
+        }
+
+        public Author? GetByName(string firstName, string lastName)
+        {
+            return _context.Authors.FirstOrDefault(a=>a.LastName == lastName 
+                    && a.FirstName==firstName);
         }
     }
 }

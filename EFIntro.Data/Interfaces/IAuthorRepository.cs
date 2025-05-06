@@ -13,6 +13,7 @@ namespace EFIntro.Data.Interfaces
         bool HasBooks(int authorId);
         void LoadBooks(Author author);
         List<Author> GetAllWithBooks();
-        List<IGrouping<int, Book>> AuthorsGroupIdBooks();
+        List<IGrouping<int, Book>> AuthorsWithBooksCount();
+        Author? GetByName(string firstName, string lastName);
     }
 }
