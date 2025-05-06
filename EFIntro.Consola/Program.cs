@@ -573,7 +573,7 @@ namespace EFIntro.Consola
             do
             {
                 Console.Clear();
-                Console.WriteLine("AUTHORS");
+                Console.WriteLine("✍️ AUTHORS");
                 Console.WriteLine("1 - List of Authors");
                 Console.WriteLine("2 - Add New Author");
                 Console.WriteLine("3 - Delete an Author");
